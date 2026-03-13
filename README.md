@@ -1,10 +1,10 @@
-# 🧠 DocMind — RAG-powered Document Q&A using Endee Vector Database
+# 💼 JobMatch AI — Resume-to-Job Matcher using Endee Vector Database
 
-> Ask questions about your documents in plain English. DocMind retrieves semantically relevant content using **Endee**, then generates precise answers using **Google Gemini**.
+> Upload your resume → Endee semantically searches 100+ job descriptions → Groq AI explains exactly why each job matches your profile.
 
 ![Python](https://img.shields.io/badge/Python-3.10+-blue?style=flat-square)
 ![Endee](https://img.shields.io/badge/Vector_DB-Endee-64ffda?style=flat-square)
-![Gemini](https://img.shields.io/badge/LLM-Gemini_1.5_Flash-orange?style=flat-square)
+![Groq](https://img.shields.io/badge/LLM-Groq_LLaMA3-orange?style=flat-square)
 ![Streamlit](https://img.shields.io/badge/UI-Streamlit-red?style=flat-square)
 ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
 
@@ -12,70 +12,97 @@
 
 ## 📌 Problem Statement
 
-Enterprise knowledge is scattered across PDFs, Word documents, and text files. Traditional keyword search misses the meaning behind questions. This project solves that by building a **semantic RAG pipeline** — documents are indexed as vector embeddings in Endee, enabling meaning-based retrieval before an LLM synthesises the final answer.
+Job searching is broken. Candidates keyword-stuff resumes. Recruiters miss great candidates. Traditional search fails because it matches words, not meaning.
+
+**JobMatch AI solves this** by converting both resumes and job descriptions into semantic vector embeddings stored in **Endee vector database**, then finding matches based on actual meaning and skill similarity — not just keyword overlap.
+
+---
+
+## 📸 Screenshots
+
+> After running the app, take screenshots and save them in a `screenshots/` folder in this repo.
 
 ---
 
 ## 🏗️ System Design
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        INGESTION PIPELINE                        │
-│                                                                   │
-│  PDF / DOCX / TXT ──► Text Extraction ──► Chunking (400 chars)  │
-│                                               │                   │
-│                              SentenceTransformer (384-dim)        │
-│                              all-MiniLM-L6-v2                    │
-│                                               │                   │
-│                              Endee Vector DB  │                   │
-│                              (cosine, INT8)  ◄┘                  │
-└─────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                     INDEXING PIPELINE                        │
+│                                                              │
+│  100 Job Descriptions                                        │
+│       │                                                      │
+│       ▼                                                      │
+│  Text Representation                                         │
+│  (title + company + skills + description)                    │
+│       │                                                      │
+│       ▼                                                      │
+│  SentenceTransformer (all-MiniLM-L6-v2)                     │
+│  384-dimensional embeddings                                  │
+│       │                                                      │
+│       ▼                                                      │
+│  Endee Vector DB                                             │
+│  (cosine similarity, INT8 quantisation)                      │
+└─────────────────────────────────────────────────────────────┘
 
-┌─────────────────────────────────────────────────────────────────┐
-│                         QUERY PIPELINE                           │
-│                                                                   │
-│  User Question                                                    │
-│       │                                                           │
-│       ▼                                                           │
-│  SentenceTransformer ──► 384-dim query vector                    │
-│       │                                                           │
-│       ▼                                                           │
-│  Endee.query(top_k=5) ──► Top-5 similar chunks + scores         │
-│       │                                                           │
-│       ▼                                                           │
-│  Prompt construction: [context chunks] + [question]             │
-│       │                                                           │
-│       ▼                                                           │
-│  Google Gemini 1.5 Flash ──► Final Answer                        │
-└─────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                     MATCHING PIPELINE                        │
+│                                                              │
+│  User uploads Resume (PDF / TXT)                            │
+│       │                                                      │
+│       ▼                                                      │
+│  Text Extraction (PyPDF2)                                    │
+│       │                                                      │
+│       ▼                                                      │
+│  SentenceTransformer → 384-dim resume vector                │
+│       │                                                      │
+│       ▼                                                      │
+│  Endee.query(top_k=8)                                        │
+│  Cosine similarity search across 100 job vectors            │
+│       │                                                      │
+│       ▼                                                      │
+│  Ranked Job Results (with similarity scores)                │
+│       │                                                      │
+│       ▼                                                      │
+│  Groq LLaMA3-8B                                             │
+│  Personalised career analysis + skill gap advice            │
+│       │                                                      │
+│       ▼                                                      │
+│  Final UI: Job Cards + AI Report + Match Stats              │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 🔑 How Endee is Used
+## 🔑 How Endee Vector Database is Used
 
-Endee is the **core vector storage and retrieval engine** in this project:
+Endee is the **core engine** of this project — not just a plugin:
 
-| Operation | Endee API Used | Purpose |
+| Operation | Endee API | Purpose |
 |---|---|---|
-| Index creation | `client.create_index(name, dimension=384, space_type="cosine", precision=INT8)` | Creates a cosine-similarity index optimised with INT8 quantisation |
-| Upserting vectors | `index.upsert([{id, vector, meta}])` | Stores document chunk embeddings with metadata (source, text) |
-| Semantic search | `index.query(vector, top_k=5)` | Retrieves the 5 most semantically similar chunks to the query |
-| Index management | `client.list_indexes()`, `client.delete_index()` | Used during re-ingestion |
+| Create index | `client.create_index(name, dimension=384, space_type="cosine", precision=INT8)` | Creates optimised cosine similarity index with INT8 quantisation for fast search |
+| Index jobs | `index.upsert([{id, vector, meta}])` | Stores 100 job embeddings with full metadata (title, company, skills, description) |
+| Match resume | `index.query(vector=resume_vec, top_k=8)` | Finds 8 most semantically similar jobs to the resume in milliseconds |
+| Metadata retrieval | `result.get('meta', {})` | Retrieves job details alongside similarity scores for display |
 
-The `meta` field stores the original chunk text and source filename, so retrieved vectors carry the full context needed to generate an answer — no secondary database required.
+**Why Endee over other vector DBs?**
+- INT8 quantisation reduces memory footprint without losing accuracy
+- Single-node deployment handles our job index with millisecond latency
+- Clean Python SDK makes integration straightforward
+- Self-hosted — no API keys or rate limits for vector search
 
 ---
 
 ## ✨ Features
 
-- 📄 **Multi-format ingestion** — supports PDF, DOCX, TXT, and Markdown
-- 🔍 **Semantic search** — vector similarity via Endee (not keyword matching)
-- 💬 **LLM-powered answers** — Gemini 1.5 Flash generates grounded responses
-- 🌐 **Web UI** — clean Streamlit interface with source attribution
-- 🖥️ **CLI mode** — `python query.py` for terminal-based Q&A
-- ⚡ **Fast** — INT8 quantisation in Endee reduces memory and speeds up search
-- 🔒 **Grounded** — LLM is explicitly instructed to answer only from retrieved context
+- 📄 **Resume PDF upload** — extract and embed resume text automatically
+- ✏️ **Skills paste** — alternatively just type your skills
+- 🔍 **Semantic job search** — Endee finds jobs by meaning, not keywords
+- 🥇 **Ranked results** — jobs sorted by cosine similarity score
+- 🏷️ **Skill tags** — see required skills at a glance per job
+- 🤖 **AI career analysis** — Groq explains your fit, gaps, and top recommendation
+- 📊 **Match statistics** — top match %, average score, total jobs searched
+- 💼 **100 real job listings** — across Google, Microsoft, Amazon, Flipkart, Endee.io and 90+ companies
 
 ---
 
@@ -83,116 +110,94 @@ The `meta` field stores the original chunk text and source filename, so retrieve
 
 ```
 rag-endee-qa/
-├── docker-compose.yml   # Spins up Endee server
-├── ingest.py            # Document loading, chunking, embedding & indexing
-├── query.py             # CLI RAG Q&A interface
-├── app.py               # Streamlit web UI
-├── requirements.txt
-├── docs/                # ← Put your documents here
-│   └── sample.txt
-└── README.md
+├── docker-compose.yml     # Spins up Endee vector DB server
+├── ingest_jobs.py         # Embeds & indexes 100 jobs into Endee
+├── jobs_data.py           # Dataset of 100 job descriptions
+├── app_jobs.py            # Streamlit web UI
+└── requirements.txt       # Python dependencies
 ```
 
 ---
 
-## 🚀 Setup & Execution
+## 🚀 Setup & Running
 
 ### Prerequisites
-
 - Python 3.10+
 - Docker & Docker Compose
-- Free Gemini API key → [aistudio.google.com](https://aistudio.google.com)
+- Free Groq API key → [console.groq.com](https://console.groq.com)
 
----
-
-### Step 1 — Clone & fork (mandatory per evaluation requirements)
+### Step 1 — Clone & fork (mandatory per evaluation)
 
 ```bash
-# Fork https://github.com/endee-io/endee on GitHub first, then:
-git clone https://github.com/<your-username>/endee
-cd endee
-
-# Then clone this project
-git clone https://github.com/<your-username>/rag-endee-qa
+# Star and fork https://github.com/endee-io/endee first, then:
+git clone https://github.com/ivishaltiwari123-glitch/rag-endee-qa
 cd rag-endee-qa
 ```
 
-### Step 2 — Start Endee
-
-```bash
-docker compose up -d
-# Endee dashboard → http://localhost:8080
-```
-
-### Step 3 — Install Python dependencies
+### Step 2 — Install dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### Step 4 — Add your documents
+### Step 3 — Start Endee vector DB
 
 ```bash
-mkdir docs
-cp /path/to/your/files/*.pdf docs/
-# Supports: .pdf  .docx  .txt  .md
+docker compose up -d
 ```
 
-### Step 5 — Ingest documents into Endee
+Endee dashboard available at → **http://localhost:8080**
+
+### Step 4 — Index 100 job descriptions into Endee
 
 ```bash
-python ingest.py
+python ingest_jobs.py
 ```
 
 Expected output:
 ```
 🔌 Connecting to Endee vector DB …
-   ✅ Index 'rag_documents' created (dim=384, cosine, INT8)
-🤖 Loading embedding model (all-MiniLM-L6-v2) …
-📄 Processing: docs/company_policy.pdf
-   → 42 chunks
-✅ Done! Indexed 42 chunks from 1 file(s).
+   ✅ Index 'job_listings' created (dim=384, cosine, INT8)
+🤖 Loading embedding model …
+📋 Indexing 100 job listings …
+✅ Done! Indexed 100 jobs into Endee.
 ```
 
-### Step 6 — Ask questions
+### Step 5 — Launch the app
 
-**Option A: Web UI**
 ```bash
-export GEMINI_API_KEY=your_key_here
-streamlit run app.py
-# Open http://localhost:8501
+python -m streamlit run app_jobs.py
 ```
 
-**Option B: Command line**
-```bash
-export GEMINI_API_KEY=your_key_here
-python query.py --question "What is the refund policy?"
-```
+Open → **http://localhost:8501**
 
----
+### Step 6 — Use the app
 
-## 🔧 Configuration
-
-| Parameter | File | Default | Description |
-|---|---|---|---|
-| `CHUNK_SIZE` | `ingest.py` | 400 | Characters per text chunk |
-| `CHUNK_OVERLAP` | `ingest.py` | 80 | Overlap between chunks |
-| `TOP_K` | `query.py` / `app.py` | 5 | Number of chunks to retrieve |
-| `EMBEDDING_DIM` | `ingest.py` | 384 | Embedding dimension (fixed to model) |
-| `ENDEE_HOST` | All files | `http://localhost:8080` | Endee server URL |
+1. Paste your Groq API key in the sidebar
+2. Upload your resume PDF **or** paste your skills
+3. Click **Find Matching Jobs**
+4. See ranked jobs + AI career analysis!
 
 ---
 
 ## 🧪 Example
 
-**Question:** *"What are the key responsibilities of a software engineer?"*
+**Input:** Resume with skills — Python, Machine Learning, Deep Learning, NLP, PyTorch
 
-**Retrieved chunks:** 5 relevant passages from uploaded job descriptions
+**Output:**
+```
+🥇 ML Engineer - NLP @ Sprinklr          — 68% match
+🥈 NLP Engineer @ Sarvam AI              — 65% match
+🥉 Deep Learning Researcher @ Samsung    — 63% match
+#4 AI/ML Intern @ Endee.io               — 61% match
+```
 
-**Answer:**
-> Based on the documents, a software engineer is responsible for designing and implementing software features, conducting code reviews, collaborating with cross-functional teams, and maintaining system reliability. They are also expected to write unit tests and participate in architectural discussions.
->
-> *Sources: job_description.pdf*
+**AI Analysis:**
+> Your profile strongly aligns with NLP and ML engineering roles.
+> Top match is Sprinklr because your PyTorch and transformer experience
+> directly maps to their text classification needs.
+> Recommend learning LangChain to unlock more GenAI roles.
+> Overall fit score: 7.5/10
 
 ---
 
@@ -200,16 +205,26 @@ python query.py --question "What is the refund policy?"
 
 | Component | Technology |
 |---|---|
-| Vector Database | **Endee** (open-source, self-hosted) |
-| Embeddings | **sentence-transformers** `all-MiniLM-L6-v2` |
-| LLM | **Google Gemini 1.5 Flash** |
+| Vector Database | **Endee** (self-hosted, open-source) |
+| Embeddings | **sentence-transformers** `all-MiniLM-L6-v2` (384-dim) |
+| LLM for Analysis | **Groq LLaMA3-8B** (free, ultra-fast) |
 | Web UI | **Streamlit** |
-| PDF parsing | **PyPDF2** |
-| DOCX parsing | **python-docx** |
+| PDF Parsing | **PyPDF2** |
 | Containerisation | **Docker Compose** |
+
+---
+
+## 🔧 Configuration
+
+| Parameter | File | Default | Description |
+|---|---|---|---|
+| `TOP_K` | `app_jobs.py` | 8 | Number of jobs to retrieve |
+| `EMBEDDING_DIM` | `ingest_jobs.py` | 384 | Embedding size |
+| `GROQ_MODEL` | `app_jobs.py` | `llama-3.1-8b-instant` | Groq LLM model |
+| `ENDEE_HOST` | Both files | `http://localhost:8080` | Endee server URL |
 
 ---
 
 ## 📄 License
 
-MIT © 2026
+MIT © 2026 — Vishal Tiwari
