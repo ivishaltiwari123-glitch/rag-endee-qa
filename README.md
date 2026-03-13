@@ -20,7 +20,20 @@ Job searching is broken. Candidates keyword-stuff resumes. Recruiters miss great
 
 ## 📸 Screenshots
 
-> After running the app, take screenshots and save them in a `screenshots/` folder in this repo.
+### Resume Upload
+![PDF Upload](Screenshots/pdf_upload.png)
+
+### Job Match Results
+![Job Match Results](Screenshots/match_results.png)
+
+### More Results
+![Job Match Results 2](Screenshots/match_results_2.png)
+
+### AI Career Analysis
+![AI Analysis](Screenshots/ai_analysis.png)
+
+### Conclusion
+![Conclusion](Screenshots/Conclusion.png)
 
 ---
 
