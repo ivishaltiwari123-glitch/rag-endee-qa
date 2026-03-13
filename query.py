@@ -14,9 +14,9 @@ Requirements:
 
 import os
 import argparse
-from sentence_transformers import SentenceTransformer
-from endee import Endee
-import google.generativeai as genai
+from sentence_transformers import SentenceTransformer # type: ignore
+from endee import Endee # type: ignore
+import google.generativeai as genai # type: ignore
 
 # ── Config ────────────────────────────────────────────────────────────────────
 INDEX_NAME   = "rag_documents"

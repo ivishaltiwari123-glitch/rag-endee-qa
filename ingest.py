@@ -14,10 +14,10 @@ import glob
 import uuid
 from pathlib import Path
 
-from sentence_transformers import SentenceTransformer
-from endee import Endee, Precision
-import PyPDF2
-import docx
+from sentence_transformers import SentenceTransformer # type: ignore
+from endee import Endee, Precision # type: ignore
+import PyPDF2 # type: ignore
+import docx # type: ignore
 
 # ── Config ────────────────────────────────────────────────────────────────────
 DOCS_DIR       = "./docs"
@@ -77,10 +77,11 @@ def main():
     client.set_base_url(f"{ENDEE_HOST}/api/v1")
 
     # 2. (Re)create index
-    existing = [idx["name"] for idx in client.list_indexes()]
-    if INDEX_NAME in existing:
-        print(f"   Index '{INDEX_NAME}' exists — deleting and recreating …")
+    try:
         client.delete_index(INDEX_NAME)
+        print(f"   Deleted existing index '{INDEX_NAME}'")
+    except:
+        pass
 
     client.create_index(
         name=INDEX_NAME,
@@ -115,7 +116,7 @@ def main():
         print(f"   → {len(chunks)} chunks")
 
         # Build vectors batch
-        vectors = model.encode(chunks, show_progress_bar=True, convert_to_list=True)
+        vectors = model.encode(chunks, show_progress_bar=True).tolist()
 
         items = []
         for i, (chunk, vec) in enumerate(zip(chunks, vectors)):
