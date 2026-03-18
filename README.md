@@ -132,40 +132,6 @@ rag-endee-qa/
 
 ---
 
-## 🚀 Setup & Running
-
-### Prerequisites
-- Python 3.10+
-- Docker & Docker Compose
-- Free Groq API key → [console.groq.com](https://console.groq.com)
-
-### Step 1 — Clone & fork (mandatory per evaluation)
-
-```bash
-# Star and fork https://github.com/endee-io/endee first, then:
-git clone https://github.com/ivishaltiwari123-glitch/rag-endee-qa
-cd rag-endee-qa
-```
-
-### Step 2 — Install dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-### Step 3 — Start Endee vector DB
-
-```bash
-docker compose up -d
-```
-
-Endee dashboard available at → **http://localhost:8080**
-
-### Step 4 — Index 100 job descriptions into Endee
-
-```bash
-python ingest_jobs.py
-```
 
 Expected output:
 ```
@@ -176,22 +142,8 @@ Expected output:
 ✅ Done! Indexed 100 jobs into Endee.
 ```
 
-### Step 5 — Launch the app
-
-```bash
-python -m streamlit run app_jobs.py
-```
-
+### Launch the app
 Open → https://www.youtube.com/watch?v=yk0FaOU5_ZY
-
-### Step 6 — Use the app
-
-1. Paste your Groq API key in the sidebar
-2. Upload your resume PDF **or** paste your skills
-3. Click **Find Matching Jobs**
-4. See ranked jobs + AI career analysis!
-
----
 
 ## 🧪 Example
 
