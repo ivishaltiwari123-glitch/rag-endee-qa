@@ -132,16 +132,6 @@ rag-endee-qa/
 
 ---
 
-
-Expected output:
-```
-🔌 Connecting to Endee vector DB …
-   ✅ Index 'job_listings' created (dim=384, cosine, INT8)
-🤖 Loading embedding model …
-📋 Indexing 100 job listings …
-✅ Done! Indexed 100 jobs into Endee.
-```
-
 ### Launch the app
 Open → https://www.youtube.com/watch?v=yk0FaOU5_ZY
 
