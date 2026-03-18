@@ -182,7 +182,7 @@ Expected output:
 python -m streamlit run app_jobs.py
 ```
 
-Open → **http://localhost:8501**
+Open → https://www.youtube.com/watch?v=yk0FaOU5_ZY
 
 ### Step 6 — Use the app
 
