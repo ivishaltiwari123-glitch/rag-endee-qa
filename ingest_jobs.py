@@ -7,13 +7,13 @@ Usage:
     python ingest_jobs.py
 """
 
-from sentence_transformers import SentenceTransformer
-from endee import Endee, Precision
+from sentence_transformers import SentenceTransformer # type: ignore
+from endee import Endee, Precision # type: ignore
 from jobs_data import JOBS
 
 INDEX_NAME    = "job_listings"
 EMBEDDING_DIM = 384
-ENDEE_HOST    = "http://localhost:8080"
+ENDEE_HOST    = "https://endee-server-production-625c.up.railway.app"
 
 
 def job_to_text(job: dict) -> str:
