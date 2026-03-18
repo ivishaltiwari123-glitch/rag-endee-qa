@@ -16,7 +16,7 @@ from groq import Groq
 import PyPDF2
 
 INDEX_NAME  = "job_listings"
-ENDEE_HOST  = "https://endee-server-production-625c.up.railway.app"
+ENDEE_HOST = "http://localhost:8080"
 GROQ_MODEL  = "llama-3.1-8b-instant"
 TOP_K       = 8
 

@@ -13,7 +13,7 @@ from jobs_data import JOBS
 
 INDEX_NAME    = "job_listings"
 EMBEDDING_DIM = 384
-ENDEE_HOST    = "https://endee-server-production-625c.up.railway.app"
+ENDEE_HOST = "http://localhost:8080"
 
 
 def job_to_text(job: dict) -> str:
